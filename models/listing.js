@@ -1,3 +1,5 @@
+// it defines the "listing Schema"
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 

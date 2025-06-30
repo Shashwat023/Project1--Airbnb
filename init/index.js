@@ -1,3 +1,5 @@
+// this file is just to initialize the sample data
+
 const mongoose = require("mongoose");
 const initData = require("./data.js");
 const Listing = require("../models/listing.js");
