@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meta Data</title>
+    <title>WanderLust</title>
 </head>
 <body>
     <h3>Listing Details: </h3>
@@ -15,6 +15,8 @@
         <li><%= listing.location %></li>
         <li><%= listing.country %></li>
     </ul>
+    <br>
+    <a href="/listings/<%= listing._id %>/edit">Edit this Listing!</a>
 
 </body>
 </html>
