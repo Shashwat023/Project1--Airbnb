@@ -9,7 +9,6 @@ const ejsMate = require("ejs-mate");
 const wrapAsync = require("./utils/wrapAsync.js");
 const ExpressError = require("./utils/ExpressError.js");
 const {listingSchema, reviewSchema} = require("./schema.js");
-const { wrap } = require("module");
 
 app.set("view engine", "ejs");                    // |
 app.set("views", path.join(__dirname, "views"));  // | both for index route
@@ -37,6 +36,7 @@ app.get("/", (req, res) => {
     res.send("I am Groot!");
 });
 
+// for server side validation of listings (data of newly entered listing)
 const validateListing = (req, res, next) => {
     let {error} = listingSchema.validate(req.body);
     if(error){
@@ -47,6 +47,7 @@ const validateListing = (req, res, next) => {
     }
 };
 
+// for server side validation of reviews (data of newly entered reviews)
 const validateReview = (req, res, next) => {
     let {error} = reviewSchema.validate(req.body);
     if(error){
