@@ -70,7 +70,7 @@ app.get("/listings/new",  (req, res) => {
 // show route 
 app.get("/listings/:id", wrapAsync(async (req, res) => {
     let {id} = req.params;
-    const listing = await Listing.findById(id);
+    const listing = await Listing.findById(id).populate("reviews");
     res.render("./listings/show.ejs", {listing});
 }));
 
@@ -83,7 +83,6 @@ app.post("/listings", validateListing ,wrapAsync(async (req, res, next) => {
     res.redirect("/listings");
 })
 );
-
 
 // update route :- EDIT 
 app.get("/listings/:id/edit",validateListing, wrapAsync(async (req, res) => {
