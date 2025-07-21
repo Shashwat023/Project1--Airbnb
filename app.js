@@ -9,6 +9,7 @@ const ejsMate = require("ejs-mate");
 const wrapAsync = require("./utils/wrapAsync.js");
 const ExpressError = require("./utils/ExpressError.js");
 const {listingSchema, reviewSchema} = require("./schema.js");
+const { wrap } = require("module");
 
 app.set("view engine", "ejs");                    // |
 app.set("views", path.join(__dirname, "views"));  // | both for index route
@@ -118,6 +119,16 @@ app.post("/listings/:id/reviews", validateReview, wrapAsync(async(req, res) => {
 
     console.log("new review saved");
     res.redirect(`/listings/${listing._id}`);
+}));
+
+//reviews :- delete route
+app.delete("/listings/:id/reviews/:reviewId", wrapAsync( async(req, res) => {
+    let {id, reviewId} = req.params;
+
+    await Listing.findByIdAndUpdate(id, {$pull: {reviews: reviewId}}); // it will search and delete the existing object id from hotel info
+    await Review.findByIdAndDelete(reviewId); // it will delete the review with matching review id from db
+
+    res.redirect(`/listings/${id}`);
 }));
 
 // app.get("/testListing", async (req, res) => {
