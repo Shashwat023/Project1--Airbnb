@@ -1,16 +1,15 @@
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
-const Listing = require("./models/listing.js");
-const Review = require("./models/review.js");
 const path = require("path");
 const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
-const wrapAsync = require("./utils/wrapAsync.js");
 const ExpressError = require("./utils/ExpressError.js");
-const {listingSchema, reviewSchema} = require("./schema.js");
 
-app.set("view engine", "ejs");                    // |
+const listings = require("./routes/listing.js");
+const reviews = require("./routes/review.js");
+
+app.set("view engine", "ejs");                      // |
 app.set("views", path.join(__dirname, "views"));  // | both for index route
 app.use(express.urlencoded ({extended: true}));   // | for show route
 app.use(methodOverride("_method"));               // | for put and delete req
@@ -36,115 +35,11 @@ app.get("/", (req, res) => {
     res.send("I am Groot!");
 });
 
-// for server side validation of listings (data of newly entered listing)
-const validateListing = (req, res, next) => {
-    let {error} = listingSchema.validate(req.body);
-    if(error){
-        let errMsg = error.details.map((el) => el.message).join(",");
-        throw new ExpressError(400, errMsg);
-    }else{
-        next();
-    }
-};
+// all routes of listings:-
+app.use("/listings", listings);
 
-// for server side validation of reviews (data of newly entered reviews)
-const validateReview = (req, res, next) => {
-    let {error} = reviewSchema.validate(req.body);
-    if(error){
-        let errMsg = error.details.map((el) => el.message).join(",");
-        throw new ExpressError(400, errMsg);
-    }else{
-        next();
-    }
-};
-
-// index route
-app.get("/listings", async (req, res) => {
-    const allListings = await Listing.find({});
-    res.render("./listings/index.ejs", {allListings});
-});
-
-// Create route:- New
-app.get("/listings/new",  (req, res) => {
-    res.render("./listings/new.ejs");   
-});
-
-// show route 
-app.get("/listings/:id", wrapAsync(async (req, res) => {
-    let {id} = req.params;
-    const listing = await Listing.findById(id).populate("reviews");
-    res.render("./listings/show.ejs", {listing});
-}));
-
-// Create route:- create - actual creation of instance
-app.post("/listings", validateListing ,wrapAsync(async (req, res, next) => {
-    
-    let listing = req.body.listing;
-    const newListing = new Listing(listing); // new Listing(listing) - instance
-    await newListing.save();
-    res.redirect("/listings");
-})
-);
-
-// update route :- EDIT 
-app.get("/listings/:id/edit",validateListing, wrapAsync(async (req, res) => {
-    let {id} = req.params;
-    const listing = await Listing.findById(id);
-    res.render("./listings/edit.ejs", {listing});
-}));
-
-// update route :- update (put req)
-app.put("/listings/:id", wrapAsync(async (req, res) => {
-    let {id} = req.params;
-    await Listing.findByIdAndUpdate(id, {...req.body.listing}); // {...req.body.listing} - deconstructing app parameters and updating the values
-    res.redirect("/listings");
-}));
-
-// delete route
-app.delete("/listings/:id", wrapAsync(async (req, res) => {
-    let {id} = req.params;
-    let deletedListing = await Listing.findByIdAndDelete(id);
-    console.log(deletedListing);
-    res.redirect("/listings");
-}));
-
-//reviews :- post route
-app.post("/listings/:id/reviews", validateReview, wrapAsync(async(req, res) => {
-    let listing = await Listing.findById(req.params.id);
-    let newReview = new Review(req.body.review);
-
-    listing.reviews.push(newReview);
-
-    await newReview.save();
-    await listing.save();
-
-    console.log("new review saved");
-    res.redirect(`/listings/${listing._id}`);
-}));
-
-//reviews :- delete route
-app.delete("/listings/:id/reviews/:reviewId", wrapAsync( async(req, res) => {
-    let {id, reviewId} = req.params;
-
-    await Listing.findByIdAndUpdate(id, {$pull: {reviews: reviewId}}); // it will search and delete the existing object id from hotel info
-    await Review.findByIdAndDelete(reviewId); // it will delete the review with matching review id from db
-
-    res.redirect(`/listings/${id}`);
-}));
-
-// app.get("/testListing", async (req, res) => {
-//     let sampleListing = new Listing({
-//         title: "My New Villa",
-//         description: "By the beach",
-//         price: 1200,
-//         location: "Calangute, Goa",
-//         country: "India"
-//     });
-
-//     await sampleListing.save();
-//     console.log("sample was saved");
-//     res.send("successful testing");
-// });
+// all routes of reviews:-
+app.use("/listings/:id/reviews", reviews);
 
 // app.all("*", (req, res, next) => {
 //     next(new ExpressError(404, "pg nt fnd!"));
