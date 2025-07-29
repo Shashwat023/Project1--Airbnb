@@ -7,9 +7,13 @@ const ejsMate = require("ejs-mate");
 const ExpressError = require("./utils/ExpressError.js");
 const session = require("express-session");
 const flash = require("connect-flash");
+const passport = require("passport");
+const LocalStrategy = require("passport-local");
+const User = require("./models/user.js");
 
-const listings = require("./routes/listing.js");
-const reviews = require("./routes/review.js");
+const listingsRouter = require("./routes/listing.js");
+const reviewsRouter = require("./routes/review.js");
+const userRouter = require("./routes/user.js");
 
 app.set("view engine", "ejs");                      // |
 app.set("views", path.join(__dirname, "views"));  // | both for index route
@@ -51,16 +55,37 @@ app.get("/", (req, res) => {
 app.use(session(sessionOptions));
 app.use(flash());
 
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy (User.authenticate));
+
+passport.serializeUser(User.serializeUser());  // to store info of user
+passport.deserializeUser(User.deserializeUser());  // to remove stored info
+
 app.use((req, res, next) => {
     res.locals.success = req.flash("success");
+    res.locals.error = req.flash("error");
     next();
 });
 
+// app.get("/demouser", async (req, res) => {
+//     let fakeUser = new User({
+//         email: "freethinker232004@gmail.com",
+//         username: "nothingcmf",
+//     });
+
+//     let registeredUser = await User.register(fakeUser, "helloworld");
+//     res.send(registeredUser);
+// });
+
 // all routes of listings:-
-app.use("/listings", listings);
+app.use("/listings", listingsRouter);
 
 // all routes of reviews:-
-app.use("/listings/:id/reviews", reviews);
+app.use("/listings/:id/reviews", reviewsRouter);
+
+// all routes of signup:-
+app.use("/", userRouter);
 
 // app.all("*", (req, res, next) => {
 //     next(new ExpressError(404, "pg nt fnd!"));
