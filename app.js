@@ -57,7 +57,7 @@ app.use(flash());
 
 app.use(passport.initialize());
 app.use(passport.session());
-passport.use(new LocalStrategy (User.authenticate));
+passport.use(new LocalStrategy (User.authenticate()));
 
 passport.serializeUser(User.serializeUser());  // to store info of user
 passport.deserializeUser(User.deserializeUser());  // to remove stored info
