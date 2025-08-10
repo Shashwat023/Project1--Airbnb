@@ -8,8 +8,8 @@ const mongoose = require("mongoose");
 const path = require("path");
 const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
-// const ExpressError = require("./utils/ExpressError.js");
 const session = require("express-session");
+const MongoStore = require("connect-mongo");
 const flash = require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
@@ -26,7 +26,8 @@ app.use(methodOverride("_method"));               // | for put and delete req
 app.engine("ejs", ejsMate);                       // | for templating
 app.use(express.static(path.join(__dirname, "/public"))); // | to use static files - css nd js
 
-const MONGO_URL = "mongodb://127.0.0.1:27017/WanderLust";
+// const MONGO_URL = "mongodb://127.0.0.1:27017/WanderLust";
+const dbUrl = process.env.ATLASDB_URL;
 
 main()
     .then(() => {
@@ -36,13 +37,25 @@ main()
         console.log(err);
     });
 
-
 async function main(){
-    await mongoose.connect(MONGO_URL);
+    await mongoose.connect(dbUrl);
 }
 
+const store = MongoStore.create({
+    mongoUrl: dbUrl,
+    crypto: {
+        secret: process.env.SECRET,
+    },
+    touchAfter: 24 * 3600,
+});
+
+store.on("error", () => {
+    console.log("ERROR in MONGO SESSION STORE", err);
+});
+
 const sessionOptions = {
-    secret: "mysupersecretcode",
+    store,
+    secret: process.env.SECRET,
     resave: false,
     saveUninitialized: true,
     cookie: {
